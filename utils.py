@@ -1,9 +1,10 @@
-from sklearn.metrics import precision_score, recall_score, matthews_corrcoef
+from sklearn.metrics import precision_score, recall_score, matthews_corrcoef,average_precision_score
 import numpy as np
 from itertools import combinations
 from sklearn.metrics import precision_recall_curve, auc
 from sklearn.preprocessing import label_binarize
 import numpy as np
+
 
 def f_measure(y_true, y_pred, beta=1):
     precision = precision_score(y_true, y_pred, average='weighted')
@@ -57,3 +58,56 @@ def g_mean_multiclass(y_true, y_pred, n_classes):
         recalls.append(recall)
     g_mean = np.sqrt(np.prod(recalls))
     return g_mean,recalls
+def mean_average_precision(y_true:np.ndarray, y_pred_probs:np.ndarray, num_classes):
+    
+    MAP = 0
+    for i in range(num_classes):
+        # Convert to binary problem
+        y_true_binary = (y_true == i).astype(int)
+        y_pred_prob = y_pred_probs[:, i]
+        
+        # Calculate average precision
+        AP = average_precision_score(y_true_binary, y_pred_prob)
+        MAP += AP
+    
+    MAP /= num_classes
+    return MAP
+def mapk(y_true: np.ndarray, y_pred_scores:np.ndarray, k=3):
+    """
+    Computes the mean average precision at k.
+
+    Parameters:
+    - y_true: list of actual labels
+    - y_pred_scores: list of lists, confidence scores for each class for each instance
+    - k: number of top predictions to consider
+
+    Returns:
+    - MAP@K score
+    """
+    # Initialize variable to accumulate average precisions
+    average_precisions = []
+    
+    # Iterate over all the instances
+    for i, scores in enumerate(y_pred_scores):
+        # Get the actual label for the current instance
+        actual = y_true[i]
+        
+        # Sort the scores in descending order and get the top k indices
+        top_k_preds = np.argsort(scores)[::-1][:k]
+        
+        # Check if the actual label is among the top k predictions
+        if actual in top_k_preds:
+            # Find the rank (index) of the actual label in the sorted list
+            rank = np.where(top_k_preds == actual)[0][0]
+            # Calculate precision at K for this instance (1/(rank+1) because rank is 0-based)
+            precision_at_k = 1.0 / (rank + 1)
+        else:
+            # If the actual label is not in the top k, precision is 0 for this instance
+            precision_at_k = 0
+        
+        # Append the precision at k for the current instance to the list
+        average_precisions.append(precision_at_k)
+    
+    # Compute the mean of the average precisions for all instances
+    mapk = np.mean(average_precisions)
+    return mapk
