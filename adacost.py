@@ -280,7 +280,7 @@ class AdaCost(BaseWeightBoosting, ClassifierMixin):
         if not iboost == self.n_estimators - 1:
             # Only boost positive weights
             cost = cost[:,np.newaxis]
-            condition = (np.tile(sample_weight > 0, (3, 1)).T | (estimator_weight < 0))
+            condition = (np.tile(sample_weight > 0, (n_classes, 1)).T | (estimator_weight < 0))
             sample_weight = sample_weight[:,np.newaxis] * np.exp(estimator_weight * cost * condition)
             #sample_weight =sample_weight * np.exp(estimator_weight*cost*
                                     #((sample_weight > 0) |
