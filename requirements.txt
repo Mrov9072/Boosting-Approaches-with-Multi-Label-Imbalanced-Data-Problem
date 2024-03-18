@@ -4,4 +4,4 @@ pmlb==1.0.1.post3
 ucimlrepo==0.0.3
 lightgbm==4.3.0
 imblearn==0.0
-xgboost==3.17.0
+xgboost==2.0.3
